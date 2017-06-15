@@ -1,5 +1,9 @@
 ﻿# pure-api
-This is light-weight Pure API wrapper written in C#.
+This is a light-weight Pure API wrapper written in C#. 
+
+REST responses are automatically deserialized to a dynamic JSON object. This makes it very easy to use as-is. 
+This code is intended as a quick and dirty demonstration of how to retrieve data from the Pure API.
+If you need type safety, feel free to implement the model on top and use the overloaded methods.
 
 ## Dependencies
 - .NET 4.6+
@@ -18,7 +22,6 @@ Instantiate the Pure Client with the URL, API key and version.
 var client = new PureClient(baseUrl, apiKey, apiVersion);
 ```
 ### Making Requests
-
 Request a particular resource and execute it with the Pure Client.
 ```csharp
 var request = new PureRequest("persons");

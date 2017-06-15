@@ -80,5 +80,9 @@ namespace PureAPI
             } while (moreChanges);
         }
 
+		public void GetChanges(DateTime date, Action<dynamic> callback){
+			GetChanges<dynamic>(date, callback);
+		}
+
     }
 }
