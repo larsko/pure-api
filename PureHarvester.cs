@@ -5,23 +5,23 @@ using System.Threading.Tasks;
 using System.Threading;
 namespace PureAPI
 {
-    /// <summary>
-    /// Pure API harvester.
-    /// </summary>
-    public class PureHarvester
-    {
+	/// <summary>
+	/// Pure API harvester.
+	/// </summary>
+	public class PureHarvester
+	{
 
-        PureClient client;
+		PureClient client;
 
-        public PureHarvester(PureClient client)
-        {
-            this.client = client;
-        }
+		public PureHarvester(PureClient client)
+		{
+			this.client = client;
+		}
 
-        public void Harvest(string endpoint, Action<dynamic> callback, string rendering = "", int pageSize = 25)
-        {
-            Harvest<dynamic>(endpoint, callback, rendering, pageSize);
-        }
+		public void Harvest(string endpoint, Action<dynamic> callback, string rendering = "", int pageSize = 25)
+		{
+			Harvest<dynamic>(endpoint, callback, rendering, pageSize);
+		}
 
 		/// <summary>
 		/// Harvests all data from the specified content type.
@@ -32,27 +32,28 @@ namespace PureAPI
 		/// <param name="rendering">Rendering.</param>
 		/// <param name="pageSize">Page size.</param>
 		/// <typeparam name="T">The 1st type parameter.</typeparam>
-		public void Harvest<T>(string endpoint, Action<T> callback, string rendering = "", int pageSize = 25){
+		public void Harvest<T>(string endpoint, Action<T> callback, string rendering = "", int pageSize = 25)
+		{
 
-            int page = 1;
-            var request = new PureRequest(endpoint);
+			int page = 1;
+			var request = new PureRequest(endpoint);
 			request.SetParameter("pageSize", pageSize);
 			request.SetParameter("page", page);
 
-            bool morePages = false;
-            do
-            {
-                var results = client.Execute(request);
-                if(results.items.Count > 0)
-                    callback(results);
+			bool morePages = false;
+			do
+			{
+				var results = client.Execute(request);
+				if (results.items.Count > 0)
+					callback(results);
 
-                request.SetParameter("page", page++);
+				request.SetParameter("page", page++);
 
-                morePages = (results.items.Count > 0 && 
-                             results.navigationLink != null);
-                
-            } while (morePages);
-        }
+				morePages = (results.items.Count > 0 &&
+							 results.navigationLink != null);
+
+			} while (morePages);
+		}
 
 		/// <summary>
 		/// Harvests content in parallel.
@@ -61,12 +62,14 @@ namespace PureAPI
 		/// <param name="callback">Callback.</param>
 		/// <param name="rendering">Rendering.</param>
 		/// <param name="pageSize">Page size.</param>
-		public void ParallelHarvest(string endpoint, Action<dynamic> callback, string rendering = "", int pageSize = 25){
+		public void ParallelHarvest(string endpoint, Action<dynamic> callback, string rendering = "", int pageSize = 25)
+		{
 
 			int numPages = client.Execute(new PureRequest(endpoint)).count / pageSize;
 			var pages = Enumerable.Range(0, numPages);
 
-			Parallel.ForEach(pages, page => {
+			Parallel.ForEach(pages, page =>
+			{
 
 				var request = new PureRequest(endpoint);
 				request.SetParameter("page", page);
@@ -77,37 +80,39 @@ namespace PureAPI
 
 		}
 
-        /// <summary>
-        /// Gets changes from Pure since a given date.
-        /// </summary>
-        /// <remarks>
-        /// This will yield all changes, so any filtering (e.g. family, changeType) 
-        /// has to be implemented in the callback function.
-        /// </remarks>
-        /// <param name="date">Date.</param>
-        /// <param name="callback">Callback.</param>
-        /// <typeparam name="T">The 1st type parameter.</typeparam>
-        public void GetChanges<T>(DateTime date, Action<T> callback){
+		/// <summary>
+		/// Gets changes from Pure since a given date.
+		/// </summary>
+		/// <remarks>
+		/// This will yield all changes, so any filtering (e.g. family, changeType) 
+		/// has to be implemented in the callback function.
+		/// </remarks>
+		/// <param name="date">Date.</param>
+		/// <param name="callback">Callback.</param>
+		/// <typeparam name="T">The 1st type parameter.</typeparam>
+		public void GetChanges<T>(DateTime date, Action<T> callback)
+		{
 
-            string input = date.ToString("yyyy-MM-dd");
-            var request = new PureRequest($"changes/{input}");
-            bool moreChanges = false;
-            do
-            {
-                var changes = client.Execute(request);
-                if (changes.count > 0)
-                    callback(changes);
+			string input = date.ToString("yyyy-MM-dd");
+			var request = new PureRequest($"changes/{input}");
+			bool moreChanges = false;
+			do
+			{
+				var changes = client.Execute(request);
+				if (changes.count > 0)
+					callback(changes);
 
-                moreChanges = changes.moreChanges;
+				moreChanges = changes.moreChanges;
 
-                request = new PureRequest($"changes/{changes.lastId}");
+				request = new PureRequest($"changes/{changes.lastId}");
 
-            } while (moreChanges);
-        }
+			} while (moreChanges);
+		}
 
-		public void GetChanges(DateTime date, Action<dynamic> callback){
+		public void GetChanges(DateTime date, Action<dynamic> callback)
+		{
 			GetChanges<dynamic>(date, callback);
 		}
 
-    }
+	}
 }
