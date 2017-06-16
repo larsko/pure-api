@@ -29,17 +29,33 @@ namespace PureAPI
             RestSharpRequest.AddHeader("Accept", HTTP_ACCEPT);
 		}
 
-        /// <summary>
-        /// Adds the parameter the request.
-        /// </summary>
-        /// <param name="key">Key.</param>
-        /// <param name="val">Value.</param>
-        public void AddParameter(string key, object val){
-            this.RestSharpRequest.AddParameter(key,val);
+		/// <summary>
+		/// Adds the parameter.
+		/// </summary>
+		/// <param name="key">Key.</param>
+		/// <param name="val">Value.</param>
+		/// <param name="useHeader">If set to <c>true</c> add to headers.</param>
+        void AddParameter(string key, object val, bool useHeader = false){
+			if(useHeader)
+				this.RestSharpRequest.AddHeader(key, val.ToString());
+			else
+            	this.RestSharpRequest.AddParameter(key,val);
         }
 
-        public void SetParameter(string key, object val){
-            this.RestSharpRequest.Parameters.Find(x=>x.Name==key).Value=val;
+		/// <summary>
+		/// Sets the parameter.
+		/// </summary>
+		/// <param name="key">Key.</param>
+		/// <param name="val">Value.</param>
+		/// <param name="useHeader">If set to <c>true</c> add to headers.</param>
+        public void SetParameter(string key, object val, bool useHeader = false){
+			
+			var parameter = RestSharpRequest.Parameters.Find(x => x.Name == key);
+
+			if (parameter == null)
+				AddParameter(key, val, useHeader);
+			else
+				parameter.Value = val;
         }
 	}
 }

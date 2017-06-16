@@ -20,6 +20,12 @@ namespace PureAPI
 		/// </summary>
 		RestClient client;
 
+		/// <summary>
+		/// Initializes a new instance of the <see cref="T:PureAPI.PureClient"/> class.
+		/// </summary>
+		/// <param name="baseUrl">Base URL.</param>
+		/// <param name="apiKey">API key.</param>
+		/// <param name="version">Version.</param>
         public PureClient(string baseUrl, string apiKey, string version)
         {
             ApiKey = apiKey;
@@ -31,34 +37,17 @@ namespace PureAPI
         }
 
         /// <summary>
-        /// Makes an async REST request and invokes a callback function.
-        /// </summary>
-        /// <returns>The request.</returns>
-        /// <param name="request">Request.</param>
-        /// <param name="callback">Callback.</param>
-        /// <typeparam name="T">The 1st type parameter.</typeparam>
-        private void Request<T>(RestRequest request, Action<T> callback)
-        {
-			//todo: add error handling
-			Authenticate(request);
-            client.ExecuteAsync(request, response =>
-            {
-                callback(ConversionHelper.Deserialize<T>(response.Content));
-            });
-        }
-
-        /// <summary>
         /// Makes a serial REST request and deserializes the response.
         /// </summary>
         /// <returns>The request.</returns>
         /// <param name="request">Request.</param>
         /// <typeparam name="T">The 1st type parameter.</typeparam>
-        private T Request<T>(RestRequest request, Method method = Method.GET)
+		private T Request<T>(PureRequest request, Method method = Method.GET)
         {
-            request.Method = method;
+			request.RestSharpRequest.Method = method;
 
 			Authenticate(request);
-            var res = client.Execute(request);
+			var res = client.Execute(request.RestSharpRequest);
             return ConversionHelper.Deserialize<T>(res.Content);
         }
 
@@ -71,25 +60,14 @@ namespace PureAPI
             return Request<dynamic>(request);
         }
 
-        /// <summary>
-        /// Requests the resource and serializes the response to the type.
-        /// </summary>
-        /// <returns>The request.</returns>
-        /// <param name="request">Request.</param>
-        /// <typeparam name="T">The 1st type parameter.</typeparam>
-        public T Request<T>(PureRequest request){
-            return Request<T>(request.RestSharpRequest);
-        }
-
-        /// <summary>
-        /// Authenticates the specified request, either header or query string.
-        /// </summary>
-        /// <returns>The authenticated request.</returns>
-        /// <param name="request">Request.</param>
-        void Authenticate(RestRequest request)
+		/// <summary>
+		/// Authenticate the specified request.
+		/// </summary>
+		/// <returns>The authenticate.</returns>
+		/// <param name="request">Request.</param>
+		void Authenticate(PureRequest request)
         {
-            if(!request.Parameters.Exists(x => x.Name == "api-key"))
-            request.AddHeader("api-key", ApiKey);
+			request.SetParameter("api-key", ApiKey, true);
         }
     }
 

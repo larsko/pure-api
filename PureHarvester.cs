@@ -1,5 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using System.Threading;
 namespace PureAPI
 {
     /// <summary>
@@ -32,10 +35,9 @@ namespace PureAPI
 		public void Harvest<T>(string endpoint, Action<T> callback, string rendering = "", int pageSize = 25){
 
             int page = 1;
-
             var request = new PureRequest(endpoint);
-			request.AddParameter("pageSize", pageSize);
-			request.AddParameter("page", page);
+			request.SetParameter("pageSize", pageSize);
+			request.SetParameter("page", page);
 
             bool morePages = false;
             do
@@ -51,6 +53,29 @@ namespace PureAPI
                 
             } while (morePages);
         }
+
+		/// <summary>
+		/// Harvests content in parallel.
+		/// </summary>
+		/// <param name="endpoint">Endpoint.</param>
+		/// <param name="callback">Callback.</param>
+		/// <param name="rendering">Rendering.</param>
+		/// <param name="pageSize">Page size.</param>
+		public void ParallelHarvest(string endpoint, Action<dynamic> callback, string rendering = "", int pageSize = 25){
+
+			int numPages = client.Execute(new PureRequest(endpoint)).count / pageSize;
+			var pages = Enumerable.Range(0, numPages);
+
+			Parallel.ForEach(pages, page => {
+
+				var request = new PureRequest(endpoint);
+				request.SetParameter("page", page);
+				request.SetParameter("pageSize", pageSize);
+
+				callback(client.Execute(request));
+			});
+
+		}
 
         /// <summary>
         /// Gets changes from Pure since a given date.

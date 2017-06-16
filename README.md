@@ -6,7 +6,7 @@ This code is intended as a quick and dirty demonstration of how to retrieve data
 If you need type safety, feel free to implement the model on top and use the overloaded methods.
 
 ## Dependencies
-- .NET 4.6+
+- .NET 4.6+ (+ Microsoft.CSharp)
 - Newtonsoft.Json
 - RestSharp
 
@@ -27,10 +27,10 @@ Request a particular resource and execute it with the Pure Client.
 var request = new PureRequest("persons");
 ```
 
-The result returned is a `dynamic` type. 
+The `result` returned is a `dynamic` type. 
 ```csharp
 var result = client.Execute(request);
-int count = result.count; // runtime type-checking
+int count = result.count;
 ```
 
 It is possible to deserialize to a concrete type - simply pass the type parameter `T`:
@@ -57,6 +57,7 @@ harvester.Harvest("research-outputs", data => {
 
 });
 ```
+Harvesting can also be done in parallel using `harvester.ParallelHarvest(string endpoint,Action<dynamic> callback)`.
 Note: The harvester uses dynamic typing, so please refer to the API reference for the JSON structure.
 
 The Pure API can also return all a list of changes since a given date. 
@@ -69,4 +70,3 @@ harvester.GetChanges<dynamic>(new DateTime(2017, 06, 15), data => {
     Console.WriteLine(data.count)
 });
 ```
-
