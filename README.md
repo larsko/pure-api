@@ -6,7 +6,7 @@ This code is intended as a quick and dirty demonstration of how to retrieve data
 If you need type safety, feel free to implement the model on top and use the overloaded methods.
 
 ## Dependencies
-- .NET 4.6+ (+ Microsoft.CSharp)
+- .NET 4.6+ (+ Microsoft.CSharp for Mono users)
 - Newtonsoft.Json
 - RestSharp
 
@@ -30,7 +30,9 @@ var request = new PureRequest("persons");
 The `result` returned is a `dynamic` type. 
 ```csharp
 var result = client.Execute(request);
-int count = result.count;
+int count = result.count; // total # persons returned given criteria
+Console.WriteLine(result.items[0].name.lastName); // print name of first record
+
 ```
 
 It is possible to deserialize to a concrete type - simply pass the type parameter `T`:
@@ -65,8 +67,12 @@ This is useful to process incremental updates after having harvested the initial
 
 Usage is simple:
 ```csharp
-harvester.GetChanges<dynamic>(new DateTime(2017, 06, 15), data => {
+harvester.GetChanges(new DateTime(2017, 06, 15), data => {
     // Print the number of changes in this batch:
-    Console.WriteLine(data.count)
+    Console.WriteLine(data.count);
+    // Print each tuple.
+    foreach(var item in data.items){
+        Console.WriteLine($"{item.changeType}: {item.uuid} {item.familySystemName} v.{item.version}");
+    }
 });
 ```
