@@ -10,7 +10,9 @@ namespace PureAPI
 	/// </summary>
 	public class PureHarvester
 	{
-
+		/// <summary>
+		/// The Pure API client.
+		/// </summary>
 		PureClient client;
 
 		public PureHarvester(PureClient client)
@@ -62,7 +64,7 @@ namespace PureAPI
 		/// <param name="callback">Callback.</param>
 		/// <param name="rendering">Rendering.</param>
 		/// <param name="pageSize">Page size.</param>
-		public void ParallelHarvest(string endpoint, Action<dynamic> callback, string rendering = "", int pageSize = 25)
+		public void ParallelHarvest<T>(string endpoint, Action<T> callback, string rendering = "", int pageSize = 25)
 		{
 
 			int numPages = client.Execute(new PureRequest(endpoint)).count / pageSize;
@@ -70,7 +72,6 @@ namespace PureAPI
 
 			Parallel.ForEach(pages, page =>
 			{
-
 				var request = new PureRequest(endpoint);
 				request.SetParameter("page", page);
 				request.SetParameter("pageSize", pageSize);
@@ -78,6 +79,21 @@ namespace PureAPI
 				callback(client.Execute(request));
 			});
 
+		}
+
+		/// <summary>
+		/// Harvests content in parallel.
+		/// </summary>
+		/// <remarks>
+		/// Assumes dynamic typing.
+		/// </remarks>
+		/// <param name="endpoint">Endpoint.</param>
+		/// <param name="callback">Callback.</param>
+		/// <param name="rendering">Rendering.</param>
+		/// <param name="pageSize">Page size.</param>
+		public void ParallelHarvest(string endpoint, Action<dynamic> callback, string rendering = "", int pageSize = 25)
+		{
+			ParallelHarvest<dynamic>(endpoint, callback, rendering, pageSize);
 		}
 
 		/// <summary>
@@ -92,23 +108,31 @@ namespace PureAPI
 		/// <typeparam name="T">The 1st type parameter.</typeparam>
 		public void GetChanges<T>(DateTime date, Action<T> callback)
 		{
-
 			string input = date.ToString("yyyy-MM-dd");
 			var request = new PureRequest($"changes/{input}");
-			bool moreChanges = false;
-			do
-			{
+			bool moreChanges = true;
+
+			while (moreChanges){
 				var changes = client.Execute(request);
+
 				if (changes.count > 0)
 					callback(changes);
 
 				moreChanges = changes.moreChanges;
 
+				// Pass the resumption token to get next batch of changes
 				request = new PureRequest($"changes/{changes.lastId}");
-
-			} while (moreChanges);
+			}
 		}
 
+		/// <summary>
+		/// Gets the changes.
+		/// </summary>
+		/// <remarks>
+		/// Assumes dynamic typing.
+		/// </remarks>
+		/// <param name="date">Date.</param>
+		/// <param name="callback">Callback.</param>
 		public void GetChanges(DateTime date, Action<dynamic> callback)
 		{
 			GetChanges<dynamic>(date, callback);

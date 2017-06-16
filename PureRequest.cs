@@ -17,7 +17,7 @@ namespace PureAPI
 		/// Gets the RestSharp request.
 		/// </summary>
 		/// <value>The REST equest.</value>
-		internal RestRequest RestSharpRequest { get; private set; }
+		public RestRequest RestSharpRequest { get; private set; }
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="T:PureAPI.PureRequest"/> class.
@@ -26,7 +26,7 @@ namespace PureAPI
 		public PureRequest(string resource)
 		{
 			RestSharpRequest = new RestRequest(resource);
-			RestSharpRequest.AddHeader("Accept", HTTP_ACCEPT);
+			SetParameter("Accept", HTTP_ACCEPT, true);
 		}
 
 		/// <summary>
