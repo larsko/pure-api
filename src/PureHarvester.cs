@@ -1,4 +1,4 @@
-﻿using System;
+﻿﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -20,43 +20,6 @@ namespace PureAPI
 			this.client = client;
 		}
 
-		public void Harvest(string endpoint, Action<dynamic> callback, string rendering = "", int pageSize = 25)
-		{
-			Harvest<dynamic>(endpoint, callback, rendering, pageSize);
-		}
-
-		/// <summary>
-		/// Harvests all data from the specified content type.
-		/// </summary>
-		/// <returns>The harvest.</returns>
-		/// <param name="endpoint">Endpoint.</param>
-		/// <param name="callback">Callback.</param>
-		/// <param name="rendering">Rendering.</param>
-		/// <param name="pageSize">Page size.</param>
-		/// <typeparam name="T">The 1st type parameter.</typeparam>
-		public void Harvest<T>(string endpoint, Action<T> callback, string rendering = "", int pageSize = 25)
-		{
-
-			int page = 1;
-			var request = new PureRequest(endpoint);
-			request.SetParameter("pageSize", pageSize);
-			request.SetParameter("page", page);
-
-			bool morePages = false;
-			do
-			{
-				var results = client.Execute(request);
-				if (results.items.Count > 0)
-					callback(results);
-
-				request.SetParameter("page", page++);
-
-				morePages = (results.items.Count > 0 &&
-							 results.navigationLink != null);
-
-			} while (morePages);
-		}
-
 		/// <summary>
 		/// Harvests content in parallel.
 		/// </summary>
@@ -64,13 +27,16 @@ namespace PureAPI
 		/// <param name="callback">Callback.</param>
 		/// <param name="rendering">Rendering.</param>
 		/// <param name="pageSize">Page size.</param>
-		public void ParallelHarvest<T>(string endpoint, Action<T> callback, string rendering = "", int pageSize = 25)
+		public void Harvest<T>(string endpoint, Action<T> callback, bool useParallelism = true, string rendering = "", int pageSize = 25)
 		{
 
 			int numPages = client.Execute(new PureRequest(endpoint)).count / pageSize;
 			var pages = Enumerable.Range(0, numPages);
 
-			Parallel.ForEach(pages, page =>
+			int threads = useParallelism ? 4 : 1;
+			var options = new ParallelOptions { MaxDegreeOfParallelism = threads};
+
+			Parallel.ForEach(pages, options, page =>
 			{
 				var request = new PureRequest(endpoint);
 				request.SetParameter("page", page);
@@ -91,9 +57,9 @@ namespace PureAPI
 		/// <param name="callback">Callback.</param>
 		/// <param name="rendering">Rendering.</param>
 		/// <param name="pageSize">Page size.</param>
-		public void ParallelHarvest(string endpoint, Action<dynamic> callback, string rendering = "", int pageSize = 25)
+		public void Harvest(string endpoint, Action<dynamic> callback, bool parallel = true, string rendering = "", int pageSize = 25)
 		{
-			ParallelHarvest<dynamic>(endpoint, callback, rendering, pageSize);
+			Harvest<dynamic>(endpoint, callback, parallel, rendering, pageSize);
 		}
 
 		/// <summary>

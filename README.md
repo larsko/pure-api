@@ -62,7 +62,7 @@ harvester.Harvest("research-outputs", data => {
 
 });
 ```
-Harvesting can also be done in parallel using `harvester.ParallelHarvest(string endpoint,Action<dynamic> callback)`.
+By default harvesting is done in parallel (4 threads), but this can be disabled if serial requests are required.
 Note: The harvester uses dynamic typing, so please refer to the API reference for the JSON structure.
 
 The Pure API can also return all a list of changes since a given date. 
@@ -79,3 +79,6 @@ harvester.GetChanges(new DateTime(2017, 06, 15), data => {
     }
 });
 ```
+Use this by passing an `Action<T>` callback to to `GetChanges` and sift through changes as desired.
+You may want to pass a queue to gather all the changes. 
+Then afterwards it is just a matter of making a serial request (using familySystemName and uuid) for each item in the queue.
