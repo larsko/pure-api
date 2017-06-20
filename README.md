@@ -65,6 +65,13 @@ harvester.Harvest("research-outputs", data => {
 By default harvesting is done in parallel (4 threads), but this can be disabled if serial requests are required.
 Note: The harvester uses dynamic typing, so please refer to the API reference for the JSON structure.
 
+### Endpoints
+See the class `ContentType` for string constants for available endpoints.
+```csharp
+var orgs = new PureRequest(ContentType.OrganisationalUnits); // get orgs
+var persons = new PureRequest(ContentType.Persons); // get persons
+```
+
 ### Getting Changes
 The Pure API can also return all a list of changes since a given date. 
 This is useful to process incremental updates after having harvested the initial dataset (as opposed to downloading everything from scratch each time).
