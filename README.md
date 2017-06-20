@@ -79,6 +79,6 @@ harvester.GetChanges(new DateTime(2017, 06, 15), data => {
     }
 });
 ```
-Use this by passing an `Action<T>` callback to to `GetChanges` and sift through changes as desired.
+Use this by passing an `Action<T>` callback to `GetChanges` and sift through changes as desired.
 You may want to pass a queue to gather all the changes. 
 Then afterwards it is just a matter of making a serial request (using familySystemName and uuid) for each item in the queue.
