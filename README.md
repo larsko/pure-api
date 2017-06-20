@@ -44,7 +44,7 @@ var result = client.Execute<T>(request);
 ```
 Tip: http://jsonutils.com/ is a great class generation tool for JSON that can help save you some time.
 
-### Harvesting Data and Getting Changes
+### Harvesting Data
 A common use case is to download all data from a particular content family, e.g. research output. 
 The Pure API implements paging for this purpose, making it possible to download content in batches of the desired size.
 
@@ -65,8 +65,13 @@ harvester.Harvest("research-outputs", data => {
 By default harvesting is done in parallel (4 threads), but this can be disabled if serial requests are required.
 Note: The harvester uses dynamic typing, so please refer to the API reference for the JSON structure.
 
+### Getting Changes
 The Pure API can also return all a list of changes since a given date. 
 This is useful to process incremental updates after having harvested the initial dataset (as opposed to downloading everything from scratch each time).
+
+Each change is a tuple (changeType, uuid, familySystemName, version).
+Every time content is updated in Pure, the version is incremented and the operation `changeType` is tracked.
+When you pass a date to this endpoint, it will return a sequence of changes in chronological order.
 
 Usage is simple:
 ```csharp
