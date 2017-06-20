@@ -5,6 +5,9 @@ REST responses are automatically deserialized to a dynamic JSON object. This mak
 This code is intended as a quick and dirty demonstration of how to retrieve data from the Pure API.
 If you need type safety, feel free to implement the model on top and use the overloaded methods.
 
+For an introduction to the Pure API, please refer to the Swagger.io documentation. 
+The documentation can be found at https://<PURE_URL>/ws/api/59/api-docs.
+
 ## Dependencies
 - .NET 4.6+ (+ Microsoft.CSharp for Mono users)
 - Newtonsoft.Json
@@ -13,9 +16,9 @@ If you need type safety, feel free to implement the model on top and use the ove
 ## Usage
 Create an API key for the Pure API. You will need to pass the API key for every request. It is recommended to store the configuration values below to your `App.Config` file.
 ```csharp
-string baseUrl = "<PURE_URL>"; // do not include /ws
-string apiKey = "<PURE_API_KEY>";
-string apiVersion = "59"; // API version to use
+string baseUrl = "<PURE_URL>"; // do not include the relative path, i.e. /ws/api
+string apiKey = "<PURE_API_KEY>"; // The API key to use - generate this in Pure
+string apiVersion = "59"; // API version to use, e.g. 59, 510, 511, etc.
 ```
 Instantiate the Pure Client with the URL, API key and version.
 ```csharp
