@@ -107,6 +107,38 @@ namespace PureAPI
 		/// The thesauri.
 		/// </summary>
 		public static string Thesauri = "thesauri";
+
+		/// <summary>
+		/// Returns the endpoint for the specified family system name.
+		/// </summary>
+		/// <remarks>
+		/// The changes endpoint yields family system names that do not match
+		/// the name of the corresponding API endpoints. This method helps fix that.
+		/// </remarks>
+		/// <returns>The family.</returns>
+		/// <param name="familySystemName">Family system name.</param>
+		public static string FromFamily(string familySystemName){
+
+			if (!familyToEndpoint.ContainsKey(familySystemName))
+				return "unknown";
+
+			return familyToEndpoint[familySystemName];
+		}
+
+		/// <summary>
+		/// Maps family system names to endpoints.
+		/// </summary>
+		static Dictionary<string, string> familyToEndpoint = new Dictionary<string, string>()
+		{
+			{"Person", Persons},
+			{"Organisation", OrganisationalUnits},
+			{"Journal", Journals},
+			{"Event", Events},
+			{"Publisher", Publishers},
+			{"ExternalPerson", ExternalPersons},
+			{"ResearchOutput", ResearchOutputs}
+		};
+
 	}
 
 }

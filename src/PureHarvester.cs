@@ -104,5 +104,40 @@ namespace PureAPI
 			GetChanges<dynamic>(date, callback);
 		}
 
+		/// <summary>
+		/// Returns a queue of changes for given endpoint and operation.
+		/// </summary>
+		/// <returns>The changes.</returns>
+		/// <param name="date">Date.</param>
+		/// <param name="contentEndpoint">Endpoint.</param>
+		/// <param name="operation">Operation.</param>
+		public Queue<Change> FilterChanges(DateTime date, string contentEndpoint, string operation = ""){
+
+			var result = new Queue<Change>();
+
+			// change type: CREATE, ADDED [relation], UPDATE
+
+			GetChanges(date, data =>{
+				foreach(var item in data.items){
+
+					var change = new Change(
+						$"{item.changeType}",
+						$"{item.uuid}",
+						$"{item.familySystemName}",
+						short.Parse($"{item.version}")
+					);
+
+					// can generalize operation to be multiple opps.
+					if (change.Endpoint == contentEndpoint
+					   )
+					{
+						result.Enqueue(change);
+					}
+				}
+			});
+
+			return result;
+		}
+
 	}
 }
