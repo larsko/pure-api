@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Threading;
+using System.Collections;
 namespace PureAPI
 {
 	/// <summary>
@@ -20,32 +21,6 @@ namespace PureAPI
 			this.client = client;
 		}
 
-		/// <summary>
-		/// Harvests content in parallel.
-		/// </summary>
-		/// <param name="endpoint">Endpoint.</param>
-		/// <param name="callback">Callback.</param>
-		/// <param name="rendering">Rendering.</param>
-		/// <param name="pageSize">Page size.</param>
-		public void Harvest<T>(string endpoint, Action<T> callback, bool useParallelism = true, string rendering = "", int pageSize = 25)
-		{
-
-			int numPages = client.Execute(new PureRequest(endpoint)).count / pageSize;
-			var pages = Enumerable.Range(0, numPages);
-
-			int threads = useParallelism ? 4 : 1;
-			var options = new ParallelOptions { MaxDegreeOfParallelism = threads};
-
-			Parallel.ForEach(pages, options, page =>
-			{
-				var request = new PureRequest(endpoint);
-				request.SetParameter("page", page);
-				request.SetParameter("pageSize", pageSize);
-
-				callback(client.Execute(request));
-			});
-
-		}
 
 		/// <summary>
 		/// Harvests content in parallel.
@@ -60,6 +35,54 @@ namespace PureAPI
 		public void Harvest(string endpoint, Action<dynamic> callback, bool parallel = true, string rendering = "", int pageSize = 25)
 		{
 			Harvest<dynamic>(endpoint, callback, parallel, rendering, pageSize);
+		}
+
+		/// <summary>
+		/// Harvests content in parallel.
+		/// </summary>
+		/// <param name="endpoint">Endpoint.</param>
+		/// <param name="callback">Callback.</param>
+		/// <param name="rendering">Rendering.</param>
+		/// <param name="pageSize">Page size.</param>
+		public void Harvest<T>(string endpoint, Action<T> callback, bool useParallelism = true, string rendering = "", int pageSize = 25)
+		{
+			int numPages = client.Execute(new PureRequest(endpoint)).count / pageSize;
+			var pages = Enumerable.Range(0, numPages);
+
+			int threads = useParallelism ? 4 : 1;
+			var options = new ParallelOptions { MaxDegreeOfParallelism = threads};
+
+			Parallel.ForEach(pages, options, page =>
+			{
+				var request = new PureRequest(endpoint);
+				request.SetParameter("page", page);
+				request.SetParameter("pageSize", pageSize);
+
+				callback(client.Execute(request));
+			});
+		}
+
+		/// <summary>
+		/// Harvests the changes.
+		/// </summary>
+		/// <param name="changes">Changes.</param>
+		/// <param name="callback">Callback.</param>
+		public void HarvestChangeset(List<Change> changes, Action<dynamic> callback)
+		{
+			HarvestChangeset<dynamic>(changes, callback);
+		}
+
+		/// <summary>
+		/// Harvests the changes.
+		/// </summary>
+		/// <param name="changes">Changes.</param>
+		/// <param name="callback">Callback.</param>
+		/// <typeparam name="T">The 1st type parameter.</typeparam>
+		public void HarvestChangeset<T>(List<Change> changes, Action<T> callback){
+			Parallel.ForEach(changes, change =>
+			{
+				callback(client.Execute(new PureRequest(change.ResourceUrl)));
+			});
 		}
 
 		/// <summary>
@@ -110,33 +133,41 @@ namespace PureAPI
 		/// <returns>The changes.</returns>
 		/// <param name="date">Date.</param>
 		/// <param name="contentEndpoint">Endpoint.</param>
-		/// <param name="operation">Operation.</param>
-		public Queue<Change> FilterChanges(DateTime date, string contentEndpoint, string operation = ""){
+		/// <param name="operations">Operations.</param>
+		public List<Change> FilterChanges(DateTime date, string contentEndpoint, params string[] operations){
 
-			var result = new Queue<Change>();
+			var result = new Dictionary<string,Change>();
 
 			// change type: CREATE, ADDED [relation], UPDATE
 
 			GetChanges(date, data =>{
 				foreach(var item in data.items){
 
+					// Note: changes w/o uuid and version may appear, handle this
+					string uuid = $"{item.uuid}";
+					string version = $"{item.version}";
+
 					var change = new Change(
 						$"{item.changeType}",
-						$"{item.uuid}",
+						uuid,
 						$"{item.familySystemName}",
-						short.Parse($"{item.version}")
+						version == string.Empty ? -1 : int.Parse(version)
 					);
 
 					// can generalize operation to be multiple opps.
-					if (change.Endpoint == contentEndpoint
-					   )
+					if (change.Endpoint == contentEndpoint)
 					{
-						result.Enqueue(change);
+						if(operations != null && operations.Contains(change.ChangeType)){
+							// keep track of unique UUID - no need to download twice
+							if(!result.ContainsKey(change.UUID)){
+								result.Add(change.UUID, change);
+							}
+						}
 					}
 				}
 			});
 
-			return result;
+			return result.Select(x => x.Value).ToList();
 		}
 
 	}

@@ -95,11 +95,13 @@ Use this by passing an `Action<T>` callback to `GetChanges` and sift through cha
 You may want to pass a queue to gather all the changes. 
 Then afterwards it is just a matter of making a serial request (using `familySystemName` and `uuid`) for each item in the queue.
 
-The following example shows how this can be done (cherrypick created persons).
+The following example shows how to fetch all persons that were created since June 16, 2017. 
+Then each person is downloaded and the UUID is printed.
 ```csharp
-var q = harvester.FilterChanges(new DateTime(2017, 06, 16), ContentType.Persons, "CREATE");
-while(q.Count != 0){
-    // Retrieve the changed item:
-    var content = client.Execute(new PureRequest(q.Dequeue().ResourceUrl));
+var results = harvester.FilterChanges(new DateTime(2017, 06, 16), ContentType.Persons, "CREATE");
+// harvest all modified records in parallel
+harvester.HarvestChangeset(results, item => { 
+    Console.Writeline(item.uuid)
 }
+
 ```

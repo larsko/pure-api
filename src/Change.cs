@@ -25,7 +25,7 @@ namespace PureAPI
 		/// The version of the content.
 		/// </summary>
 		/// <value>The version.</value>
-		public short Version { get; set; }
+		public int Version { get; set; }
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="T:PureAPI.Change"/> class.
@@ -34,7 +34,7 @@ namespace PureAPI
 		/// <param name="uuid">UUID.</param>
 		/// <param name="family">Family.</param>
 		/// <param name="version">Version.</param>
-		public Change(string changeType, string uuid, string family, short version)
+		public Change(string changeType, string uuid, string family, int version)
 		{
 			ChangeType = changeType;
 			UUID = uuid;
@@ -47,5 +47,12 @@ namespace PureAPI
 		/// </summary>
 		/// <value>The resource URL.</value>
 		public string ResourceUrl => $"{Endpoint}/{UUID}";
+
+		public class Operations {
+			public const string CREATE = "CREATE";
+			public const string ADDED = "ADDED";
+			public const string UPDATE = "UPDATE";
+			public const string DELETE = "DELETE";
+		}
 	}
 }
