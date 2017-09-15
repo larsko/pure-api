@@ -16,9 +16,12 @@ namespace PureAPI
 		/// </summary>
 		PureClient client;
 
-		public PureHarvester(PureClient client)
+		int startPage = 0;
+
+		public PureHarvester(PureClient client, int startPage = 0)
 		{
 			this.client = client;
+			this.startPage = startPage;
 		}
 
 
@@ -32,7 +35,7 @@ namespace PureAPI
 		/// <param name="callback">Callback.</param>
 		/// <param name="rendering">Rendering.</param>
 		/// <param name="pageSize">Page size.</param>
-		public void Harvest(string endpoint, Action<dynamic> callback, bool parallel = true, string rendering = "", int pageSize = 25)
+		public void Harvest(string endpoint, Action<dynamic> callback, bool parallel = true, string rendering = "", int pageSize = 50)
 		{
 			Harvest<dynamic>(endpoint, callback, parallel, rendering, pageSize);
 		}
@@ -44,12 +47,12 @@ namespace PureAPI
 		/// <param name="callback">Callback.</param>
 		/// <param name="rendering">Rendering.</param>
 		/// <param name="pageSize">Page size.</param>
-		public void Harvest<T>(string endpoint, Action<T> callback, bool useParallelism = true, string rendering = "", int pageSize = 25)
+		public void Harvest<T>(string endpoint, Action<T> callback, bool useParallelism = true, string rendering = "", int pageSize = 50, int workers = 32)
 		{
 			int numPages = client.Execute(new PureRequest(endpoint)).count / pageSize;
-			var pages = Enumerable.Range(0, numPages);
+			var pages = Enumerable.Range(0, numPages).Skip(startPage);
 
-			int threads = useParallelism ? 4 : 1;
+			int threads = useParallelism ? workers : 1;
 			var options = new ParallelOptions { MaxDegreeOfParallelism = threads};
 
 			Parallel.ForEach(pages, options, page =>
@@ -59,7 +62,10 @@ namespace PureAPI
 				request.SetParameter("pageSize", pageSize);
 
 				callback(client.Execute(request));
-			});
+
+			});			
+
+
 		}
 
 		/// <summary>
@@ -67,9 +73,9 @@ namespace PureAPI
 		/// </summary>
 		/// <param name="changes">Changes.</param>
 		/// <param name="callback">Callback.</param>
-		public void HarvestChangeset(List<Change> changes, Action<dynamic> callback)
+		public void HarvestChangeset(List<Change> changes, Action<dynamic> callback, string rendering = "")
 		{
-			HarvestChangeset<dynamic>(changes, callback);
+			HarvestChangeset<dynamic>(changes, callback, rendering);
 		}
 
 		/// <summary>
@@ -78,10 +84,17 @@ namespace PureAPI
 		/// <param name="changes">Changes.</param>
 		/// <param name="callback">Callback.</param>
 		/// <typeparam name="T">The 1st type parameter.</typeparam>
-		public void HarvestChangeset<T>(List<Change> changes, Action<T> callback){
+		public void HarvestChangeset<T>(List<Change> changes, Action<T> callback, string rendering = ""){
 			Parallel.ForEach(changes, change =>
 			{
-				callback(client.Execute(new PureRequest(change.ResourceUrl)));
+				try {
+					var request = new PureRequest($"{change.ResourceUrl}");
+					if(!string.IsNullOrEmpty(rendering))
+						request.SetParameter("rendering",rendering);
+					callback(client.Execute(request));
+				} catch(Exception ex){
+					Console.WriteLine(ex.Message);
+				}
 			});
 		}
 
@@ -134,7 +147,7 @@ namespace PureAPI
 		/// <param name="date">Date.</param>
 		/// <param name="contentEndpoint">Endpoint.</param>
 		/// <param name="operations">Operations.</param>
-		public List<Change> FilterChanges(DateTime date, string contentEndpoint, params string[] operations){
+		public List<Change> FilterChanges(DateTime date, string contentEndpoint = "", params string[] operations){
 
 			var result = new Dictionary<string,Change>();
 
@@ -154,16 +167,21 @@ namespace PureAPI
 						version == string.Empty ? -1 : int.Parse(version)
 					);
 
-					// can generalize operation to be multiple opps.
-					if (change.Endpoint == contentEndpoint)
-					{
-						if(operations != null && operations.Contains(change.ChangeType)){
-							// keep track of unique UUID - no need to download twice
-							if(!result.ContainsKey(change.UUID)){
-								result.Add(change.UUID, change);
-							}
-						}
+					bool toAdd = true;
+					// can generalize to multiple endpoints
+					if (contentEndpoint != string.Empty && change.Endpoint != contentEndpoint)
+						toAdd = false;
+						
+					if(operations != null && 
+					   operations.Length > 0 && 
+					   !operations.Contains(change.ChangeType))
+						toAdd = false;	
+					
+					// keep track of unique UUID - no need to download twice
+					if (toAdd && !result.ContainsKey(change.UUID)){
+						result.Add(change.UUID, change);
 					}
+					
 				}
 			});
 
