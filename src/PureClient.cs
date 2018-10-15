@@ -1,6 +1,7 @@
 ﻿using System;
 using RestSharp;
 
+//TODO: Add method to support dynamically fetching latest API-version.
 namespace PureAPI
 {
 	/// <summary>

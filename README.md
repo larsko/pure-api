@@ -1,7 +1,7 @@
 ﻿# pure-api
 This is a light-weight Pure API wrapper written in C#. 
 
-REST responses are automatically deserialized to a dynamic JSON object. This makes it very easy to use as-is. 
+REST responses are automatically deserialized to a dynamic JSON object (Note: XML not currently supported). This makes it very easy to use as-is. 
 This code is intended as a quick and dirty demonstration of how to retrieve data from the Pure API.
 If you need type safety, feel free to implement the model on top and use the overloaded methods.
 
@@ -18,7 +18,7 @@ Create an API key for the Pure API. You will need to pass the API key for every 
 ```csharp
 string baseUrl = "<PURE_URL>"; // do not include the relative path, i.e. /ws/api
 string apiKey = "<PURE_API_KEY>"; // The API key to use - generate this in Pure
-string apiVersion = "59"; // API version to use, e.g. 59, 510, 511, etc.
+string apiVersion = "512"; // API version to use, e.g. 510, 511, 512, etc.
 ```
 Instantiate the Pure Client with the URL, API key and version.
 ```csharp

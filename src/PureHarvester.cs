@@ -35,9 +35,9 @@ namespace PureAPI
 		/// <param name="callback">Callback.</param>
 		/// <param name="rendering">Rendering.</param>
 		/// <param name="pageSize">Page size.</param>
-		public void Harvest(string endpoint, Action<dynamic> callback, bool parallel = true, string rendering = "", int pageSize = 50)
+		public void Harvest(string endpoint, Action<dynamic> callback, bool parallel = true, string rendering = "", string fields = "", int pageSize = 50)
 		{
-			Harvest<dynamic>(endpoint, callback, parallel, rendering, pageSize);
+			Harvest<dynamic>(endpoint, callback, parallel, rendering, fields, pageSize);
 		}
 
 		/// <summary>
@@ -47,7 +47,7 @@ namespace PureAPI
 		/// <param name="callback">Callback.</param>
 		/// <param name="rendering">Rendering.</param>
 		/// <param name="pageSize">Page size.</param>
-		public void Harvest<T>(string endpoint, Action<T> callback, bool useParallelism = true, string rendering = "", int pageSize = 50, int workers = 32)
+		public void Harvest<T>(string endpoint, Action<T> callback, bool useParallelism = true, string rendering = "", string fields = "", int pageSize = 50, int workers = 8)
 		{
 			int numPages = client.Execute(new PureRequest(endpoint)).count / pageSize;
 			var pages = Enumerable.Range(0, numPages).Skip(startPage);
@@ -55,16 +55,25 @@ namespace PureAPI
 			int threads = useParallelism ? workers : 1;
 			var options = new ParallelOptions { MaxDegreeOfParallelism = threads};
 
+			//foreach(var page in pages)
 			Parallel.ForEach(pages, options, page =>
 			{
 				var request = new PureRequest(endpoint);
 				request.SetParameter("page", page);
 				request.SetParameter("pageSize", pageSize);
 
+				if (!string.IsNullOrEmpty(rendering))
+					request.SetParameter("rendering", rendering);
+
+				if(!string.IsNullOrEmpty(fields)) 
+					request.SetParameter("fields", fields);
+				try{
 				callback(client.Execute(request));
-
-			});			
-
+				} catch (Exception ex){
+					// handle request exception here.
+				}
+			}
+			);
 
 		}
 
@@ -93,7 +102,7 @@ namespace PureAPI
 						request.SetParameter("rendering",rendering);
 					callback(client.Execute(request));
 				} catch(Exception ex){
-					Console.WriteLine(ex.Message);
+					// handle exception here...
 				}
 			});
 		}
@@ -153,8 +162,10 @@ namespace PureAPI
 
 			// change type: CREATE, ADDED [relation], UPDATE
 
-			GetChanges(date, data =>{
-				foreach(var item in data.items){
+			GetChanges(date, data =>
+			{
+				foreach (var item in data.items)
+				{
 
 					// Note: changes w/o uuid and version may appear, handle this
 					string uuid = $"{item.uuid}";
@@ -171,17 +182,22 @@ namespace PureAPI
 					// can generalize to multiple endpoints
 					if (contentEndpoint != string.Empty && change.Endpoint != contentEndpoint)
 						toAdd = false;
-						
-					if(operations != null && 
-					   operations.Length > 0 && 
+
+					if (operations != null &&
+					   operations.Length > 0 &&
 					   !operations.Contains(change.ChangeType))
-						toAdd = false;	
-					
+						toAdd = false;
+
 					// keep track of unique UUID - no need to download twice
-					if (toAdd && !result.ContainsKey(change.UUID)){
+					if (toAdd && !result.ContainsKey(change.UUID))
+					{
 						result.Add(change.UUID, change);
 					}
-					
+					else
+					{
+						// do nothing
+					}
+
 				}
 			});
 

@@ -137,6 +137,7 @@ namespace PureAPI
 			{"Publisher", Publishers},
 			{"ExternalPerson", ExternalPersons},
 			{"ResearchOutput", ResearchOutputs}
+			//TODO: Additional mappings need to be added if you need those.
 		};
 
 	}

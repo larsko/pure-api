@@ -1,6 +1,7 @@
 ﻿using System;
 using RestSharp;
 
+//TODO: Add support for XML deserialization.
 namespace PureAPI
 {
 	/// <summary>
