@@ -6,7 +6,7 @@ This code is intended as a quick and dirty demonstration of how to retrieve data
 If you need type safety, feel free to implement the model on top and use the overloaded methods.
 
 For an introduction to the Pure API, please refer to the Swagger.io documentation. 
-The documentation can be found at https://<PURE_URL>/ws/api/59/api-docs.
+The documentation can be found at https://<PURE_URL>/ws/api/{version}/api-docs.
 
 ## Dependencies
 - .NET 4.6+ (+ Microsoft.CSharp for Mono users)
